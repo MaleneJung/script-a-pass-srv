@@ -1,0 +1,3 @@
+[submodule "script-a-pass"]
+	path = script-a-pass
+	url = https://github.com/MaleneJung/script-a-pass
