@@ -11,7 +11,14 @@ import (
 )
 
 type Config struct {
-	Port uint16 `json:"port"`
+	Port uint16    `json:"port"`
+	TLS  TLSConfig `json:"tls"`
+}
+
+type TLSConfig struct {
+	Active      bool   `json:"active"`
+	Certificate string `json:"certificate"`
+	Key         string `json:"key"`
 }
 
 func main() {
@@ -22,19 +29,29 @@ func main() {
 		return
 	}
 
-	var config Config
+	config := Config{
+		Port: 8082,
+		TLS: TLSConfig{
+			Active:      false,
+			Certificate: "tls/certificate.pem",
+			Key:         "tls/key.pem",
+		},
+	}
 	if err := json.Unmarshal(configBuffer, &config); err != nil {
 		log.Fatal(err)
-		return
 	}
 
 	serveMux := http.NewServeMux()
 
-	if err := frontend.MuxFrontendWalker(serveMux, "/", "lenes-modular-user/", true); err != nil {
+	if err := frontend.MuxFrontendWalker(serveMux, "/", "script-a-pass/", true); err != nil {
 		log.Fatal(err)
 		return
 	}
 
-	http.ListenAndServe(":"+fmt.Sprint(config.Port), serveMux)
+	if config.TLS.Active {
+		http.ListenAndServeTLS(":"+fmt.Sprint(config.Port), config.TLS.Certificate, config.TLS.Key, serveMux)
+	} else {
+		http.ListenAndServe(":"+fmt.Sprint(config.Port), serveMux)
+	}
 
 }
